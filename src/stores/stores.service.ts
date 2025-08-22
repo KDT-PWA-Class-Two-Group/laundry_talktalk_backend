@@ -25,7 +25,7 @@ export class StoresService {
   }
 
   async findOne(id: number) {
-    return await this.storeRepository.findOne({ where: { store_id: id } });
+    return await this.storeRepository.findOne({ where: { id } }); // store_id ❌ → id ✅
   }
 
   async update(id: number, updateStoreDto: UpdateStoreDto) {

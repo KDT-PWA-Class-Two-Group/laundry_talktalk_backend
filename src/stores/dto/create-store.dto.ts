@@ -1,9 +1,8 @@
 export class CreateStoreDto {
-  submit_id: string;
-  store_name: string;
-  store_address: string;
-  store_number: string;
-  store_score?: number;
-  store_latitude: number;
-  store_longitude: number;
+  name: string;
+  address: string;
+  number: string;
+  score?: number;      // 기본값 0.0 가능
+  latitude: number;
+  longitude: number;
 }

@@ -1,34 +1,26 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity({schema:"store", name:'store'})
+@Entity({ name: 'store' })
 export class Store {
-  @PrimaryGeneratedColumn('increment')
-  store_id: number;
+  @PrimaryGeneratedColumn('increment', { name: 'store_id' })
+  id: number;
 
-  @Column({ type: 'varchar', length: 255 })
-  submit_id: string;
+  @Column({ name: 'store_name', type: 'varchar', length: 255 })
+  name: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  store_name: string;
+  @Column({ name: 'store_address', type: 'varchar', length: 500 })
+  address: string;
 
-  @Column({ type: 'varchar', length: 500 })
-  store_address: string;
+  @Column({ name: 'store_number', type: 'varchar', length: 20 })
+  number: string;
 
-  @Column({ type: 'varchar', length: 20 })
-  store_number: string;
+  @Column({ name: 'store_score', type: 'float', default: 0.0 })
+  score: number;
 
-  @Column({ type: 'float', default: 0.0 })
-  store_score: number;
+  @Column({ name: 'store_latitude', type: 'float' })
+  latitude: number;
 
-  @Column({ type: 'float' })
-  store_latitude: number;
-
-  @Column({ type: 'float' })
-  store_longitude: number;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
+  @Column({ name: 'store_longitude', type: 'float' })
+  longitude: number;
 }
+

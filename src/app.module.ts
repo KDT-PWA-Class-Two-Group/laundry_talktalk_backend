@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { StoresModule } from './stores/stores.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -20,11 +21,12 @@ import { StoresModule } from './stores/stores.module';
       database: process.env.DB_DATABASE || 'laundry_talktalk',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
-      synchronize: false, // 프로덕션에서는 false, 마이그레이션 사용
+      synchronize: true, // 프로덕션에서는 false, 마이그레이션 사용
       migrationsRun: true, // 앱 시작시 자동으로 마이그레이션 실행
     }),
     AuthModule,
     StoresModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
