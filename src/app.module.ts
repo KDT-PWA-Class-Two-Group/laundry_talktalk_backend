@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { StoresModule } from './stores/stores.module';
+import { ReservationModule } from './reservation/reservation.module';
 
 @Module({
   imports: [
@@ -23,8 +24,9 @@ import { StoresModule } from './stores/stores.module';
       synchronize: false, // 프로덕션에서는 false, 마이그레이션 사용
       migrationsRun: true, // 앱 시작시 자동으로 마이그레이션 실행
     }),
-    AuthModule,
-    StoresModule,
+  AuthModule,
+  StoresModule,
+  ReservationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
