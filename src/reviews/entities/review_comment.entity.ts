@@ -1,16 +1,40 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Review } from './review.entity';
 
-@Entity('review_comment') // DB 테이블 이름
+@Entity('review_comment')
 export class ReviewComment {
   @PrimaryGeneratedColumn()
-  review_comment_id: number; // 리뷰 대댓글 id
+  review_comment_id: number; // 댓글 PK
+
+  @Column()
+  reservation_id2: number;
+
+  @Column()
+  user_id2: number;
+
+  @Column()
+  store_id2: number;
+
+  @Column()
+  admin_id: number;
 
   @Column({ type: 'text' })
-  review_comment_contents: string; // 대댓글 내용
+  review_comment_contents: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  review_comment_create_time: string; // 대댓글 생성 날짜
+  @Column()
+  review_comment_create_time: string;
 
-  @Column({ type: 'boolean', default: false })
-  review_comment_cancel: boolean; // 대댓글 삭제 여부
+  @Column({ default: false })
+  review_comment_cancel: boolean;
+
+  // 1:1 관계: 댓글이 속한 리뷰
+  @OneToOne(() => Review)
+  @JoinColumn({ name: 'review_id2' }) // 외래키
+  review: Review;
 }
