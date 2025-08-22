@@ -1,12 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateStoreDto } from './dto/create-store.dto';
-import { UpdateStoreDto } from './dto/update-store.dto';
+import { SearchStoreResponseDto } from './dto/search-store-response.dto';
+import { StoreDetailResponseDto } from './dto/store-detail-response.dto';
 import { Store } from './entities/store.entity';
-
-
-
 
 @Injectable()
 export class StoresService {
@@ -15,57 +12,111 @@ export class StoresService {
     private storeRepository: Repository<Store>,
   ) {}
 
-  async create(createStoreDto: CreateStoreDto) {
-    const store = this.storeRepository.create(createStoreDto);
-    return await this.storeRepository.save(store);
-  }
+  // async create(createStoreDto: CreateStoreDto) {
+  //   const store = this.storeRepository.create(createStoreDto);
+  //   return await this.storeRepository.save(store);
+  // }
 
   async findAll() {
     return await this.storeRepository.find();
   }
 
-  async findOne(id: number) {
-    return await this.storeRepository.findOne({ where: { store_id: id } });
-  }
 
-  async update(id: number, updateStoreDto: UpdateStoreDto) {
-    await this.storeRepository.update(id, updateStoreDto);
-    return await this.findOne(id);
-  }
+  // 매장 상세정보 조회
+  async getStoreDetail(storeId: number): Promise<StoreDetailResponseDto> {
+    const store = await this.storeRepository.findOne({ 
+      where: { store_id: storeId },
+      relations: ['admin']
+    });
 
-  async remove(id: number) {
-    const store = await this.findOne(id);
-    if (store) {
-      return await this.storeRepository.remove(store);
+    if (!store) {
+      throw new NotFoundException(`매장 ID ${storeId}를 찾을 수 없습니다.`);
     }
-    return null;
+
+    return new StoreDetailResponseDto(store);
   }
 
-  // 위치 기반 매장 검색
-  async findByLocation(latitude: number, longitude: number, radius: number = 5) {
-    return await this.storeRepository
+  // 모든 매장 조회
+  async getAllStores(): Promise<StoreDetailResponseDto[]> {
+    const stores = await this.storeRepository.find({
+      relations: ['admin'],
+      order: { store_name: 'ASC' }
+    });
+    return stores.map(store => new StoreDetailResponseDto(store));
+  }
+
+  // 매장 삭제
+  async remove(storeId: number): Promise<void> {
+    const store = await this.storeRepository.findOne({
+      where: { store_id: storeId },
+    });
+
+    if (!store) {
+      throw new NotFoundException(`매장 ID ${storeId}를 찾을 수 없습니다.`);
+    }
+
+    await this.storeRepository.remove(store);
+  }
+
+  // 키워드로 매장 검색 (페이지네이션 포함)
+  async searchByKeyword(
+    keyword: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<SearchStoreResponseDto> {
+    const [stores, total] = await this.storeRepository
       .createQueryBuilder('store')
+      .leftJoinAndSelect('store.admin', 'admin')
       .where(
-        `(6371 * acos(cos(radians(:lat)) * cos(radians(store.store_latitude)) * cos(radians(store.store_longitude) - radians(:lng)) + sin(radians(:lat)) * sin(radians(store.store_latitude)))) < :radius`,
-        { lat: latitude, lng: longitude, radius }
+        'store.store_name LIKE :keyword OR store.store_address LIKE :keyword',
+        {
+          keyword: `%${keyword}%`,
+        },
       )
-      .getMany();
+      .orderBy('store.store_name', 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data: stores,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1,
+      },
+    };
   }
 
-  // 평점별 매장 검색
-  async findByScore(minScore: number = 0) {
-    return await this.storeRepository
+  // 위치 기반 주변 매장 검색
+  async searchNearbyStores(
+    latitude: number,
+    longitude: number,
+    radius: number = 3,
+  ): Promise<SearchStoreResponseDto> {
+    const stores = await this.storeRepository
       .createQueryBuilder('store')
-      .where('store.store_score >= :minScore', { minScore })
-      .orderBy('store.store_score', 'DESC')
+      .leftJoinAndSelect('store.admin', 'admin')
+      .where(
+        `(6371 * acos(cos(radians(:lat)) * cos(radians(store.store_latitude)) * cos(radians(store.store_longitude) - radians(:lng)) + sin(radians(:lat)) * sin(radians(store.store_latitude)))) <= :radius`,
+        { lat: latitude, lng: longitude, radius },
+      )
+      .orderBy('store.store_name', 'ASC')
       .getMany();
-  }
 
-  // 매장명으로 검색
-  async findByName(storeName: string) {
-    return await this.storeRepository
-      .createQueryBuilder('store')
-      .where('store.store_name LIKE :name', { name: `%${storeName}%` })
-      .getMany();
+    return {
+      data: stores,
+      meta: {
+        total: stores.length,
+        page: 1,
+        limit: stores.length,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
   }
 }
