@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { FavStore } from '../auth/entities/fav-store.entity';
 import { Auth } from '../auth/entities/auth.entity';
+import { FavStore } from '../auth/entities/fav-store.entity';
 import { Store } from '../stores/entities/store.entity';
 
 class CreateFavoriteDto {
@@ -36,9 +36,9 @@ export class UserFavoritesController {
     });
 
     return rows.map((r) => ({
-      storeId: r.store.id,
-      name: r.store.name,
-      address: r.store.address ?? '',
+      storeId: r.store.store_id,
+      name: r.store.store_name,
+      address: r.store.store_address ?? '',
     }));
   }
 
@@ -47,12 +47,12 @@ export class UserFavoritesController {
   async add(@Req() req: any, @Body() dto: CreateFavoriteDto) {
     const uid = 1; // TODO: JWT에서 req.user.id 추출
     const user = await this.usersRepo.findOne({ where: { id: uid } });
-    const store = await this.storesRepo.findOne({ where: { id: dto.storeId } });
+    const store = await this.storesRepo.findOne({ where: { store_id: dto.storeId } });
 
     if (!user || !store) return { message: 'invalid' };
 
     const exists = await this.favRepo.findOne({
-      where: { user: { id: uid }, store: { id: store.id }, favStoreCancel: false },
+      where: { user: { id: uid }, store: { store_id: store.store_id }, favStoreCancel: false },
     });
     if (exists) return { message: '이미 등록된 애착매장입니다.' };
 
@@ -69,7 +69,7 @@ export class UserFavoritesController {
   ) {
     const uid = 1; // TODO: JWT에서 req.user.id 추출
     const row = await this.favRepo.findOne({
-      where: { user: { id: uid }, store: { id: storeId }, favStoreCancel: false },
+      where: { user: { id: uid }, store: { store_id: storeId }, favStoreCancel: false },
       relations: ['store'],
     });
 
