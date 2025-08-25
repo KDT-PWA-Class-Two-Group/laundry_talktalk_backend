@@ -2,10 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { FavStore } from './fav-store.entity';
 
 @Entity({ name: 'auth' })
 export class Auth {
@@ -15,6 +17,8 @@ export class Auth {
   // @Column({ name: 'login_id', unique: true })
   // loginId: string; // 로그인 아이디
 
+  @OneToMany(() => FavStore, (favStore) => favStore.user)
+  favStores: FavStore[];
 
   @Column({ name: 'login_id', type: 'varchar', length: 50, unique: true, nullable: true })
   loginId: string | null;

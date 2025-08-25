@@ -14,11 +14,11 @@ export class FavStore {
   @PrimaryGeneratedColumn({ name: 'fav_id' })
   id: number; // PK
 
-  @ManyToOne(() => Auth, { eager: true })
-  @JoinColumn({ name: 'user_id2' })
+  @ManyToOne(() => Auth, (auth) => auth.favStores, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user: Auth;
 
-  @ManyToOne(() => Store, { eager: true })
+  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'store_id' })
   store: Store;
 
