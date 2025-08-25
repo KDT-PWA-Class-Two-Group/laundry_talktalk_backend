@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('reservation')
+@Entity({ name: 'reservation' })
 export class Reservation {
   @PrimaryGeneratedColumn()
   reservation_id: number;
@@ -14,16 +14,16 @@ export class Reservation {
   @Column()
   admin_id: number;
 
-  @Column({ type: 'varchar', length: 32 })
+  @Column({ type: 'varchar' })
   reservation_create_time: string;
 
-  @Column({ type: 'varchar', length: 32 })
+  @Column({ type: 'varchar' })
   reservation_start_time: string;
 
-  @Column({ type: 'varchar', length: 32 })
+  @Column({ type: 'varchar' })
   reservation_end_time: string;
 
-  @Column({ type: 'varchar', length: 32 })
+  @Column({ type: 'varchar' })
   machine_id: string;
 
   @Column({ type: 'boolean' })

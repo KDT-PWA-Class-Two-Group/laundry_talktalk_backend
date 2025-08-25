@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('store_notice_event')
+@Entity({ name: 'store_notice_event' })
 export class StoreNoticeEvent {
   @PrimaryGeneratedColumn()
   store_notice_event_id: number;

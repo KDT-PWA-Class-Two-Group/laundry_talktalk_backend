@@ -10,3 +10,4 @@ import { StoreNoticeEventController } from './store_notice_event.controller';
   controllers: [StoreNoticeEventController],
 })
 export class StoreNoticeEventModule {}
+123;
