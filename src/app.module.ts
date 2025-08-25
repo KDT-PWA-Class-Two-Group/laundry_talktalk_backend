@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { StoresModule } from './stores/stores.module';
+import { ReservationModule } from './reservation/reservation.module';
 
 @Module({
   imports: [
@@ -13,18 +12,17 @@ import { StoresModule } from './stores/stores.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST || '192.168.100.139',
       port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || '1234',
       database: process.env.DB_DATABASE || 'laundry_talktalk',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // 개발 환경에서는 true로 설정 (자동 테이블 생성)
       // migrations: [__dirname + '/migrations/*{.ts,.js}'],
-      // migrationsRun: true,
+      synchronize: true, // 프로덕션에서는 false, 마이그레이션 사용
+      // migrationsRun: true, // 앱 시작시 자동으로 마이그레이션 실행
     }),
-    StoresModule,
-    AdminModule,
+    ReservationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
