@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { StoresModule } from './stores/stores.module';
 
 @Module({
@@ -19,12 +19,12 @@ import { StoresModule } from './stores/stores.module';
       password: process.env.DB_PASSWORD || '1234',
       database: process.env.DB_DATABASE || 'laundry_talktalk',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      migrations: [__dirname + '/migrations/*{.ts,.js}'],
-      synchronize: false, // 프로덕션에서는 false, 마이그레이션 사용
-      migrationsRun: true, // 앱 시작시 자동으로 마이그레이션 실행
+      synchronize: true, // 개발 환경에서는 true로 설정 (자동 테이블 생성)
+      // migrations: [__dirname + '/migrations/*{.ts,.js}'],
+      // migrationsRun: true,
     }),
-    AuthModule,
     StoresModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
