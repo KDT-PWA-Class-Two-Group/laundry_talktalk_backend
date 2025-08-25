@@ -1,13 +1,13 @@
-// src/reviews/reviews.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+// src/reviews/reviews.controller.ts
+import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AddCommentDto } from './dto/add-comment.dto';
+import { CreateReviewDto } from './dto/create-review.dto';
 import { Review } from './entities/review.entity';
 import { ReviewComment } from './entities/review_comment.entity';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { AddCommentDto } from './dto/add-comment.dto';
 
-@Injectable()
+@Controller('reviews')
 export class ReviewsController {
   constructor(
     @InjectRepository(Review)
@@ -18,7 +18,8 @@ export class ReviewsController {
   ) {}
 
   // 📌 리뷰 작성
-  async create(createReviewDto: CreateReviewDto): Promise<{ message: string }> {
+  @Post()
+  async create(@Body() createReviewDto: CreateReviewDto): Promise<{ message: string }> {
     const review = this.reviewRepository.create({
       rating: createReviewDto.rating,
       review_contents: createReviewDto.content,
@@ -32,7 +33,11 @@ export class ReviewsController {
   }
 
   // 📌 매장별 리뷰 조회
-  async findByStore(storeId: number, sort?: string): Promise<any[]> {
+  @Get('store/:storeId')
+  async findByStore(
+    @Param('storeId', ParseIntPipe) storeId: number, 
+    @Query('sort') sort?: string
+  ): Promise<any[]> {
     const query = this.reviewRepository
       .createQueryBuilder('review')
       .where('review.store_id2 = :storeId', { storeId });
@@ -52,9 +57,10 @@ export class ReviewsController {
   }
 
   // 📌 리뷰에 댓글 작성/수정
+  @Post(':reviewId/comment')
   async addComment(
-    reviewId: number,
-    addCommentDto: AddCommentDto,
+    @Param('reviewId', ParseIntPipe) reviewId: number,
+    @Body() addCommentDto: AddCommentDto,
   ): Promise<{ message: string }> {
     const review = await this.reviewRepository.findOneBy({
       review_id: reviewId,
@@ -74,7 +80,8 @@ export class ReviewsController {
   }
 
   // 📌 리뷰 삭제
-  async remove(reviewId: number): Promise<{ message: string }> {
+  @Delete(':reviewId')
+  async remove(@Param('reviewId', ParseIntPipe) reviewId: number): Promise<{ message: string }> {
     const review = await this.reviewRepository.findOneBy({
       review_id: reviewId,
     });
