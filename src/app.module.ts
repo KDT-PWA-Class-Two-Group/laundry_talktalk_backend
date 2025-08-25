@@ -23,8 +23,6 @@ import { UsersModule } from './users/users.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: true, // 프로덕션에서는 false, 마이그레이션 사용
-      migrationsRun: true, // 앱 시작시 자동으로 마이그레이션 실행
-      // migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),
     AuthModule,
     ReviewsModule,
