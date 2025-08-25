@@ -1,15 +1,25 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Auth } from '../../auth/entities/auth.entity';
+import { Store } from '../../stores/entities/store.entity';
 
 @Entity({ name: 'store_notice_event' })
 export class StoreNoticeEvent {
   @PrimaryGeneratedColumn()
   store_notice_event_id: number;
 
-  @Column()
-  store_id2: number;
+  @ManyToOne(() => Store, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'store_id' })
+  store: Store;
 
-  @Column()
-  admin_id2: number;
+  @ManyToOne(() => Auth, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: Auth;
 
   @Column({ type: 'boolean' })
   store_notice_event_type: boolean;

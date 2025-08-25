@@ -1,12 +1,11 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Auth } from '../../auth/entities/auth.entity';
-import { Machine } from '../../machine/entities/machine.entity';
 import { Store } from '../../stores/entities/store.entity';
 
-@Entity({ name: 'reservation' })
-export class Reservation {
+@Entity('store_notice_event')
+export class StoreNoticeEvent {
   @PrimaryGeneratedColumn()
-  reservation_id: number;
+  store_notice_event_id: number;
 
   @ManyToOne(() => Store, { 
     eager: false,
@@ -22,22 +21,24 @@ export class Reservation {
   @JoinColumn({ name: 'user_id' })
   user: Auth;
 
-  @ManyToOne(() => Machine, { 
-    eager: false,
-    nullable: false 
-  })
-  @JoinColumn({ name: 'machine_id' })
-  machine: Machine;
+  @Column({ type: 'boolean', nullable: true })
+  store_notice_event_type: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  reservation_create_time: string;
+  store_notice_event_title: string;
+
+  @Column({ type: 'text', nullable: true })
+  store_notice_event_contents: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  reservation_start_time: string;
+  store_notice_event_create_time: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  reservation_end_time: string;
+  store_notice_event_start_time: string;
 
-  @Column({ type: 'boolean', default: false })
-  reservation_cancel: boolean;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  store_notice_event_end_time: string;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  store_notice_event_image_url: string;
 }

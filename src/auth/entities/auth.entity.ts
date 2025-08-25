@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
   CreateDateColumn,
@@ -6,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
 import { FavStore } from './fav-store.entity';
 
 @Entity({ name: 'auth' })
@@ -50,4 +50,19 @@ export class Auth {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  @OneToMany('Store', (store: any) => store.user)
+  stores: any[];
+
+  @OneToMany('Machine', (machine: any) => machine.user)
+  machines: any[];
+
+  @OneToMany('Reservation', (reservation: any) => reservation.user)
+  reservations: any[];
+
+  @OneToMany('Review', (review: any) => review.user)
+  reviews: any[];
+
+  @OneToMany('StoreNoticeEvent', (storeNoticeEvent: any) => storeNoticeEvent.user)
+  storeNoticeEvents: any[];
 }

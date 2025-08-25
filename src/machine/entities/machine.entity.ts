@@ -1,16 +1,34 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Auth } from "../../auth/entities/auth.entity";
+import { Store } from "../../stores/entities/store.entity";
+import { MachineOptions } from "./machine-options.entity";
 
 @Entity({ name: "machine" })
 export class Machine {
   @PrimaryGeneratedColumn({ type: "int" })
   machine_id: number;
 
-  @Column({ type: "int" })
-  store_id2: number;
+  @ManyToOne(() => Store, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'store_id' })
+  store: Store;
 
-  @Column({ type: "int" })
-  admin_id: number;
+  @ManyToOne(() => Auth, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: Auth;
 
-  @Column({ type: "boolean" })
+  @ManyToOne(() => MachineOptions, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'options_id' })
+  options: MachineOptions;
+
+  @Column({ type: "boolean", nullable: true })
   machine_type: boolean;
 }

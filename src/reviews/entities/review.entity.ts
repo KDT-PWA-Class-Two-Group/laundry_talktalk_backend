@@ -1,4 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Auth } from '../../auth/entities/auth.entity';
+import { Machine } from '../../machine/entities/machine.entity';
+import { Reservation } from '../../reservation/entities/reservation.entity';
+import { Store } from '../../stores/entities/store.entity';
 import { ReviewComment } from './review_comment.entity';
 
 @Entity('review')
@@ -6,19 +10,35 @@ export class Review {
   @PrimaryGeneratedColumn()
   review_id: number;
 
-  @Column()
-  reservation_id2: number;
+  @ManyToOne(() => Reservation, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'reservation_id' })
+  reservation: Reservation;
 
-  @Column()
-  user_id2: number;
+  @ManyToOne(() => Store, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'store_id' })
+  store: Store;
 
-  @Column()
-  store_id2: number;
+  @ManyToOne(() => Auth, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: Auth;
 
-  @Column()
-  admin_id: number;
+  @ManyToOne(() => Machine, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'machine_id' })
+  machine: Machine;
 
-  @Column()
+  @Column({ type: 'varchar', length: 10, nullable: true })
   rating: string;
 
   @Column({ type: 'text' })
@@ -30,7 +50,7 @@ export class Review {
   @Column({ default: false })
   review_cancel: boolean;
 
-  // 1:1 관계: 이 리뷰에 딱 하나의 댓글
-  @OneToOne(() => ReviewComment, (comment) => comment.review)
-  comment: ReviewComment;
+  // 1:Many 관계: 이 리뷰에 여러 댓글이 달릴 수 있음
+  @OneToMany(() => ReviewComment, (comment) => comment.review)
+  comments: ReviewComment[];
 }

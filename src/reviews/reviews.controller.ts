@@ -23,8 +23,10 @@ export class ReviewsController {
     const review = this.reviewRepository.create({
       rating: createReviewDto.rating,
       review_contents: createReviewDto.content,
-      store_id2: createReviewDto.storeId,
-      reservation_id2: createReviewDto.reservationId,
+      store: { store_id: createReviewDto.storeId }, // FK 관계 설정
+      user: { id: createReviewDto.userId }, // FK 관계 설정
+      reservation: { reservation_id: createReviewDto.reservationId }, // FK 관계 설정
+      machine: { machine_id: createReviewDto.machineId }, // FK 관계 설정
       review_create_time: new Date().toISOString(),
       review_cancel: false,
     });
@@ -40,7 +42,8 @@ export class ReviewsController {
   ): Promise<any[]> {
     const query = this.reviewRepository
       .createQueryBuilder('review')
-      .where('review.store_id2 = :storeId', { storeId });
+      .leftJoinAndSelect('review.store', 'store')
+      .where('store.store_id = :storeId', { storeId });
 
     if (sort === 'latest') {
       query.orderBy('review.review_create_time', 'DESC');
