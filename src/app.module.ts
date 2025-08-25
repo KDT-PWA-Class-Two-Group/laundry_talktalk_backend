@@ -8,7 +8,7 @@ import { ReservationModule } from './reservation/reservation.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal: true
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -25,6 +25,6 @@ import { ReservationModule } from './reservation/reservation.module';
     ReservationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService]
 })
 export class AppModule {}
