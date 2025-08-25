@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { StoresModule } from './stores/stores.module';
 
 @Module({
@@ -24,7 +23,6 @@ import { StoresModule } from './stores/stores.module';
       // migrations: [__dirname + '/migrations/*{.ts,.js}'],
       // migrationsRun: true,
     }),
-    AuthModule,
     StoresModule,
     AdminModule,
   ],
