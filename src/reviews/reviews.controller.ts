@@ -8,7 +8,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { AddCommentDto } from './dto/add-comment.dto';
 
 @Injectable()
-export class ReviewsService {
+export class ReviewsController {
   constructor(
     @InjectRepository(Review)
     private readonly reviewRepository: Repository<Review>,
