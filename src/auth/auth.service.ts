@@ -36,7 +36,7 @@ export class AuthService {
     const emailExists = await this.authRepository.exists({ where: { email: dto.email } });
 
     if (idExists || emailExists) {
-      throw new ConflictException('이미 사용중인 아이디 또는 이메일입니다.');
+      throw new ConflictException('이미 사용중인  이메일입니다.');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -52,14 +52,14 @@ export class AuthService {
     return { message: '회원가입이 완료되었습니다.' };
   }
 
-  // ✅ 로그인
+  // ✅ 로그인 (userId 기반으로 수정됨)
   async login(dto: SignInDto) {
     const user = await this.authRepository.findOne({
-      where: { email: dto.email },
+      where: { loginId: dto.userId },   // ✅ 수정: email → loginId
       select: ['id', 'loginId', 'email', 'passwordHash'],
     });
 
-    if (!user) throw new UnauthorizedException('존재하지 않는 이메일입니다.');
+    if (!user) throw new UnauthorizedException('존재하지 않는 아이디입니다.');
 
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
