@@ -2,6 +2,6 @@
 
 export class CreateMachineDto {
   storeId: number;
-  adminId: number;
+  userId: number;
   machineType: boolean;
 }

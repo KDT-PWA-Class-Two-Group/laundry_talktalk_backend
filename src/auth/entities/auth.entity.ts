@@ -1,12 +1,10 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  PrimaryGeneratedColumn
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
 import { FavStore } from './fav-store.entity';
 
 @Entity({ name: 'auth' })
