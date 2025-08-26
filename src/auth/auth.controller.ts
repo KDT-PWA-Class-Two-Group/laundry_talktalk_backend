@@ -18,20 +18,20 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // 아이디 중복 확인
-  @Get('check-id/:loginId')
-  async checkId(@Param() params: CheckIdDto) {
-    return this.authService.checkId(params.loginId);
+  @Get('check-id/:userId')
+  checkId(@Param('userId') userId: string) {
+    return this.authService.checkId(userId);
   }
 
   // 회원가입
   @Post('sign-up')
-  async signup(@Body() dto: SignUpDto) {
+  signup(@Body() dto: SignUpDto) {
     return this.authService.signup(dto);
   }
 
   // 로그인
-  @Post('sign-in')
-  async login(@Body() dto: SignInDto) {
+  @Post('login')   // ✅ 명세에 맞춤
+  login(@Body() dto: SignInDto) {
     return this.authService.login(dto);
   }
 }

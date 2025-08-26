@@ -1,28 +1,21 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  Length,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, Length } from 'class-validator';
 
 export class SignUpDto {
   @IsNotEmpty()
   @IsString()
   @Length(3, 20)
-  loginId: string;
+  userId: string;   // API 명세: userId → DB: login_id
 
   @IsNotEmpty()
   @IsString()
   @Length(8, 30)
-  password: string;
+  password: string; // DB: password (passwordHash로 매핑됨)
 
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  email: string;    // ERD: email
 
   @IsOptional()
   @IsPhoneNumber('KR')
-  phone?: string;
+  phone?: string;   // ERD: phone
 }

@@ -14,32 +14,28 @@ export class Auth {
   @PrimaryGeneratedColumn({ name: 'user_id' })
   id: number; // PK
 
-  // @Column({ name: 'login_id', unique: true })
-  // loginId: string; // 로그인 아이디
-
   @OneToMany(() => FavStore, (favStore) => favStore.user)
   favStores: FavStore[];
 
-  @Column({ name: 'login_id', type: 'varchar', length: 50, unique: true, nullable: true })
-  loginId: string | null;
+  @Column({ name: 'login_id', type: 'varchar', length: 50, unique: true, nullable: false })
+  loginId: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: true })
-  email: string | null;
-
+  @Column({ name: 'email', type: 'varchar', length: 100, unique: true, nullable: false })
+  email: string;
 
   @Exclude()
-  @Column({ name: 'password', select: false })
+  @Column({ name: 'password', type: 'varchar', select: false })
   passwordHash: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'phone', type: 'varchar', length: 20, nullable: true })
   phone?: string;
 
   @Exclude()
-  @Column({ name: 'access_token', nullable: true, select: false })
+  @Column({ name: 'access_token', type: 'varchar', nullable: true, select: false })
   accessToken?: string;
 
   @Exclude()
-  @Column({ name: 'refresh_token', nullable: true, select: false })
+  @Column({ name: 'refresh_token', type: 'varchar', nullable: true, select: false })
   refreshToken?: string;
 
   @Column({ name: 'user_admin', type: 'boolean', default: false })

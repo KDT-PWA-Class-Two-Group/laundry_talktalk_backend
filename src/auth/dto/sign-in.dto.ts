@@ -1,13 +1,11 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class SignInDto {
   @IsNotEmpty()
-  @IsString()
-  @Length(3, 20)
-  loginId: string;
+  @IsEmail()
+  email: string;    // API 명세: email → ERD: email
 
   @IsNotEmpty()
   @IsString()
-  @Length(8, 30)
-  password: string;
+  password: string; // API 명세 & ERD: password
 }
