@@ -29,13 +29,13 @@ export class Reservation {
   @JoinColumn({ name: 'machine_id' })
   machine: Machine;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'time' })
   reservation_create_time: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'time' })
   reservation_start_time: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'time' })
   reservation_end_time: string;
 
   @Column({ type: 'boolean', default: false })

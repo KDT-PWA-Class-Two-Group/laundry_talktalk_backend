@@ -54,7 +54,7 @@ export class ReviewComment {
   @Column({ type: 'text' })
   review_comment_contents: string;
 
-  @Column()
+  @Column({ type: 'time' })
   review_comment_create_time: string;
 
   @Column({ default: false })

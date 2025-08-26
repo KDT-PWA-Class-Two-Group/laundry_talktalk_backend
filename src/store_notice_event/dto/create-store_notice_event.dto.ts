@@ -1,7 +1,7 @@
 
 export class CreateStoreNoticeEventDto {
-	store_id2: number;
-	admin_id2: number;
+	store_id: number;
+	user_id: number;
 	store_notice_event_type: boolean;
 	store_notice_event_title: string;
 	store_notice_event_contents: string;

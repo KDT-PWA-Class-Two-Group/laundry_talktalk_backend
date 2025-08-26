@@ -8,6 +8,7 @@ import { MachineModule } from './machine/machine.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { StoreNoticeEventModule } from './store_notice_event/store_notice_event.module';
+import { StoresModule } from './stores/stores.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     ReservationModule,
     MachineModule,
     StoreNoticeEventModule,
+    StoresModule,
   ],
   controllers: [AppController],
   providers: [AppService]

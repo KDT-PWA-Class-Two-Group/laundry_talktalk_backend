@@ -1,4 +1,3 @@
-import { Store } from 'src/stores/entities/store.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Store } from '../../stores/entities/store.entity';
 import { Auth } from './auth.entity';
 
 @Entity({name: 'fav_store' })

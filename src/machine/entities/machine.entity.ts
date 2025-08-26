@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Auth } from "../../auth/entities/auth.entity";
 import { Store } from "../../stores/entities/store.entity";
 import { MachineOptions } from "./machine-options.entity";
@@ -22,12 +22,14 @@ export class Machine {
   @JoinColumn({ name: 'user_id' })
   user: Auth;
 
-  @ManyToOne(() => MachineOptions, { 
-    eager: false,
-    nullable: false 
+  // 세탁기 옵션들 (Many-to-Many 관계)
+  @ManyToMany(() => MachineOptions)
+  @JoinTable({
+    name: 'machine_options_relation',
+    joinColumn: { name: 'machine_id', referencedColumnName: 'machine_id' },
+    inverseJoinColumn: { name: 'option_id', referencedColumnName: 'options_id' }
   })
-  @JoinColumn({ name: 'options_id' })
-  options: MachineOptions;
+  options: MachineOptions[];
 
   @Column({ type: "boolean", nullable: true })
   machine_type: boolean;

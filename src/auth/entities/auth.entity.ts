@@ -1,11 +1,9 @@
 import { Exclude } from 'class-transformer';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  PrimaryGeneratedColumn
 } from 'typeorm';
 import { FavStore } from './fav-store.entity';
 
@@ -44,12 +42,6 @@ export class Auth {
 
   @Column({ name: 'user_admin', type: 'boolean', default: false })
   isAdmin: boolean;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
 
   @OneToMany('Store', (store: any) => store.user)
   stores: any[];
