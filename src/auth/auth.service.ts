@@ -35,9 +35,13 @@ export class AuthService {
     const idExists = await this.authRepository.exists({ where: { loginId: dto.userId } });
     const emailExists = await this.authRepository.exists({ where: { email: dto.email } });
 
-    if (idExists || emailExists) {
-      throw new ConflictException('이미 사용중인  이메일입니다.');
-    }
+    if (idExists) {
+    throw new ConflictException('이미 사용중인 아이디입니다.');
+  }
+  if (emailExists) {
+    throw new ConflictException('이미 사용중인 이메일입니다.');
+  }
+
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
