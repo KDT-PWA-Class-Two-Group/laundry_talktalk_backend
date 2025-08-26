@@ -17,33 +17,51 @@ export class Auth {
   @OneToMany(() => FavStore, (favStore) => favStore.user)
   favStores: FavStore[];
 
+  // 🔑 로그인 아이디 (회원가입 시 필수)
   @Column({ name: 'login_id', type: 'varchar', length: 50, unique: true, nullable: false })
   loginId: string;
 
-  @Column({ name: 'email', type: 'varchar', length: 100, unique: true, nullable: false })
+  // 🔑 이메일 (회원가입 시 필수)
+  @Column({ type: 'varchar', unique: true, nullable: false })
   email: string;
 
+  // 🔑 비밀번호 해시
   @Exclude()
-  @Column({ name: 'password', type: 'varchar', select: false })
+  @Column({ name: 'password', select: false })
   passwordHash: string;
 
-  @Column({ name: 'phone', type: 'varchar', length: 20, nullable: true })
+  // 📞 전화번호 (선택)
+  @Column({ nullable: true })
   phone?: string;
 
+  // 🔑 액세스 토큰 (JWT 저장용 — 선택)
   @Exclude()
-  @Column({ name: 'access_token', type: 'varchar', nullable: true, select: false })
+  @Column({ name: 'access_token', nullable: true, select: false })
   accessToken?: string;
 
+  // 🔑 리프레시 토큰 (JWT 저장용 — 선택)
   @Exclude()
-  @Column({ name: 'refresh_token', type: 'varchar', nullable: true, select: false })
+  @Column({ name: 'refresh_token', nullable: true, select: false })
   refreshToken?: string;
 
+  // 🔑 관리자 여부
   @Column({ name: 'user_admin', type: 'boolean', default: false })
   isAdmin: boolean;
 
+  // 🔑 비밀번호 재설정 토큰
+  @Column({ name: 'reset_token', type: 'varchar', nullable: true })
+  resetToken: string | null;
+
+  // 🔑 비밀번호 재설정 토큰 만료시간
+  @Column({ name: 'reset_token_expires_at', type: 'timestamptz', nullable: true })
+  resetTokenExpiresAt: Date | null;
+
+
+  // 📅 생성일
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
+  // 📅 수정일
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 }
