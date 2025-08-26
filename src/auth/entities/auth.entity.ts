@@ -1,9 +1,11 @@
 import { Exclude } from 'class-transformer';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
 } from 'typeorm';
 import { FavStore } from './fav-store.entity';
 
@@ -12,49 +14,54 @@ export class Auth {
   @PrimaryGeneratedColumn({ name: 'user_id' })
   id: number; // PK
 
-  // @Column({ name: 'login_id', unique: true })
-  // loginId: string; // 로그인 아이디
-
   @OneToMany(() => FavStore, (favStore) => favStore.user)
   favStores: FavStore[];
 
-  @Column({ name: 'login_id', type: 'varchar', length: 50, unique: true, nullable: true })
-  loginId: string | null;
+  // 🔑 로그인 아이디 (회원가입 시 필수)
+  @Column({ name: 'login_id', type: 'varchar', length: 50, unique: true, nullable: false })
+  loginId: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: true })
-  email: string | null;
+  // 🔑 이메일 (회원가입 시 필수)
+  @Column({ type: 'varchar', unique: true, nullable: false })
+  email: string;
 
-
+  // 🔑 비밀번호 해시
   @Exclude()
   @Column({ name: 'password', select: false })
   passwordHash: string;
 
+  // 📞 전화번호 (선택)
   @Column({ nullable: true })
   phone?: string;
 
+  // 🔑 액세스 토큰 (JWT 저장용 — 선택)
   @Exclude()
   @Column({ name: 'access_token', nullable: true, select: false })
   accessToken?: string;
 
+  // 🔑 리프레시 토큰 (JWT 저장용 — 선택)
   @Exclude()
   @Column({ name: 'refresh_token', nullable: true, select: false })
   refreshToken?: string;
 
+  // 🔑 관리자 여부
   @Column({ name: 'user_admin', type: 'boolean', default: false })
   isAdmin: boolean;
 
-  @OneToMany('Store', (store: any) => store.user)
-  stores: any[];
+  // 🔑 비밀번호 재설정 토큰
+  @Column({ name: 'reset_token', type: 'varchar', nullable: true })
+  resetToken: string | null;
 
-  @OneToMany('Machine', (machine: any) => machine.user)
-  machines: any[];
+  // 🔑 비밀번호 재설정 토큰 만료시간
+  @Column({ name: 'reset_token_expires_at', type: 'timestamptz', nullable: true })
+  resetTokenExpiresAt: Date | null;
 
-  @OneToMany('Reservation', (reservation: any) => reservation.user)
-  reservations: any[];
 
-  @OneToMany('Review', (review: any) => review.user)
-  reviews: any[];
+  // 📅 생성일
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
 
-  @OneToMany('StoreNoticeEvent', (storeNoticeEvent: any) => storeNoticeEvent.user)
-  storeNoticeEvents: any[];
+  // 📅 수정일
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
 }
