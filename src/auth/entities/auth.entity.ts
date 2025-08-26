@@ -1,9 +1,11 @@
 import { Exclude } from 'class-transformer';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
 } from 'typeorm';
 import { FavStore } from './fav-store.entity';
 
