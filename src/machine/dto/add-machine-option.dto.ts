@@ -1,7 +1,10 @@
-// src/dto/create-machine-option.dto.ts
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsString } from "class-validator";
 
-export class CreateMachineOptionDto {
+export class AddMachineOptionDto {
+  @IsNotEmpty()
+  @IsInt()
+  machineId: number;
+
   @IsNotEmpty()
   @IsString()
   optionsName: string;
