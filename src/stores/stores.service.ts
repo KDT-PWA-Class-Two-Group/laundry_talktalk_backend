@@ -26,7 +26,7 @@ export class StoresService {
   async getStoreDetail(storeId: number): Promise<StoreDetailResponseDto> {
     const store = await this.storeRepository.findOne({ 
       where: { store_id: storeId },
-      relations: ['admin']
+      relations: ['owner']
     });
 
     if (!store) {
@@ -39,7 +39,7 @@ export class StoresService {
   // 모든 매장 조회
   async getAllStores(): Promise<StoreDetailResponseDto[]> {
     const stores = await this.storeRepository.find({
-      relations: ['admin'],
+      relations: ['owner'],
       order: { store_name: 'ASC' }
     });
     return stores.map(store => new StoreDetailResponseDto(store));
@@ -66,7 +66,7 @@ export class StoresService {
   ): Promise<SearchStoreResponseDto> {
     const [stores, total] = await this.storeRepository
       .createQueryBuilder('store')
-      .leftJoinAndSelect('store.admin', 'admin')
+      .leftJoinAndSelect('store.owner', 'owner')
       .where(
         'store.store_name LIKE :keyword OR store.store_address LIKE :keyword',
         {
@@ -99,7 +99,7 @@ export class StoresService {
   ): Promise<SearchStoreResponseDto> {
     const stores = await this.storeRepository
       .createQueryBuilder('store')
-      .leftJoinAndSelect('store.admin', 'admin')
+      .leftJoinAndSelect('store.owner', 'owner')
       .where(
         `(6371 * acos(cos(radians(:lat)) * cos(radians(store.store_latitude)) * cos(radians(store.store_longitude) - radians(:lng)) + sin(radians(:lat)) * sin(radians(store.store_latitude)))) <= :radius`,
         { lat: latitude, lng: longitude, radius },
