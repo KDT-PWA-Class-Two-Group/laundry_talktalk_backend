@@ -2,7 +2,6 @@ import { Store } from '../entities/store.entity';
 
 export class StoreDetailResponseDto {
   store_id: number;
-  admin_id: number;
   store_name: string;
   store_address: string;
   store_number: string;
@@ -14,7 +13,6 @@ export class StoreDetailResponseDto {
 
   constructor(store: Store) {
     this.store_id = store.store_id;
-    this.admin_id = store.admin?.admin_id;
     this.store_name = store.store_name;
     this.store_address = store.store_address;
     this.store_number = store.store_number;

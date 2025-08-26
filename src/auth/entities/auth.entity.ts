@@ -1,12 +1,10 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  PrimaryGeneratedColumn
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
 import { FavStore } from './fav-store.entity';
 
 @Entity({ name: 'auth' })
@@ -45,9 +43,18 @@ export class Auth {
   @Column({ name: 'user_admin', type: 'boolean', default: false })
   isAdmin: boolean;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  @OneToMany('Store', (store: any) => store.user)
+  stores: any[];
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
+  @OneToMany('Machine', (machine: any) => machine.user)
+  machines: any[];
+
+  @OneToMany('Reservation', (reservation: any) => reservation.user)
+  reservations: any[];
+
+  @OneToMany('Review', (review: any) => review.user)
+  reviews: any[];
+
+  @OneToMany('StoreNoticeEvent', (storeNoticeEvent: any) => storeNoticeEvent.user)
+  storeNoticeEvents: any[];
 }
