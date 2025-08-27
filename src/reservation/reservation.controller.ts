@@ -10,7 +10,7 @@ import {
 import { ReservationService } from './reservation.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 
-@Controller('api/reservations')
+@Controller('reservations')
 export class ReservationController {
   constructor(private readonly service: ReservationService) {}
 
@@ -62,6 +62,16 @@ export class ReservationController {
       return { message: '예약이 취소되었습니다.' };
     } catch (e) {
       return { message: '취소할 수 없는 예약입니다.' };
+    }
+  }
+
+  // 사용자별 예약 조회
+  @Get('user/:userId')
+  async getUserReservations(@Param('userId') userId: number) {
+    try {
+      return await this.service.findByUser(Number(userId));
+    } catch (e) {
+      return { message: '예약 정보를 조회할 수 없습니다.' };
     }
   }
 }

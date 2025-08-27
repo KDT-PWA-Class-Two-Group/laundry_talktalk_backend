@@ -38,4 +38,13 @@ export class ReservationService {
   async remove(id: number): Promise<void> {
     await this.reservationRepository.delete(id);
   }
+
+  // 사용자별 예약 조회
+  async findByUser(userId: number): Promise<Reservation[]> {
+    return this.reservationRepository.find({
+      where: { user: { id: userId } },
+      relations: ['user', 'store', 'machine'], // 필요에 따라 조정
+      order: { reservation_create_time: 'DESC' },
+    });
+  }
 }

@@ -50,8 +50,9 @@ export class Store {
   @OneToMany(() => Reservation, (reservation) => reservation.store)
   reservations: Reservation[];
 
-  @OneToMany(() => Review, (review) => review.store)
-  reviews: Review[];
+  // 백엔드 서버 기동시 오류 발생하여 임시 주석 처리
+  // @OneToMany(() => Review, (review) => review.store)
+  // reviews: Review[];
 
   @OneToMany('StoreNoticeEvent', (storeNoticeEvent: any) => storeNoticeEvent.store)
   storeNoticeEvents: any[];
