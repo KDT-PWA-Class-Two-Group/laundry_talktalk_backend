@@ -12,7 +12,7 @@ export class Store {
 
   @ManyToOne(() => Auth, { 
     eager: false,
-    nullable: false  // 다시 nullable: false로 되돌림
+    nullable: true  // 임시로 nullable: true로 설정
   })
   @JoinColumn({ name: 'user_id' })
   user: Auth;

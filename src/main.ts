@@ -1,5 +1,5 @@
-import 'reflect-metadata';
 import { NestFactory } from "@nestjs/core";
+import 'reflect-metadata';
 import { AppModule } from "./app.module";
 //nest g resource 'orders'
 
