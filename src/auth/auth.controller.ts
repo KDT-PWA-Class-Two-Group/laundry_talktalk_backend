@@ -1,20 +1,17 @@
 import {
   Body,
-  ConflictException,
   Controller,
   Get,
   Param,
   Post,
-  Put,
-  UnauthorizedException,
+  Put
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignInDto } from './dto/sign-in.dto';
-import { SignUpDto } from './dto/sign-up.dto';
-import { CheckIdDto } from './dto/check-id.dto';
 import { FindIdDto } from './dto/find-id.dto';
 import { FindPasswordDto } from './dto/find-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SignInDto } from './dto/sign-in.dto';
+import { SignUpDto } from './dto/sign-up.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 
 @Controller('auth')
@@ -30,13 +27,13 @@ export class AuthController {
   // ✅ 회원가입
   @Post('sign-up')
   signup(@Body() dto: SignUpDto) {
-    console.log(dto)
     return this.authService.signup(dto);
   }
 
   // ✅ 로그인
   @Post('login')
   login(@Body() dto: SignInDto) {
+    console.log('Login DTO:', dto);
     return this.authService.login(dto);
   }
 

@@ -1,22 +1,21 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
-  UnauthorizedException,
   NotFoundException,
-  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Auth } from './entities/auth.entity';
-import { SignUpDto } from './dto/sign-up.dto';
-import { SignInDto } from './dto/sign-in.dto';
-import { FindIdDto } from './dto/find-id.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { Repository } from 'typeorm';
 import { MailService } from '../auth/mail/mail.service';
-import { JwtService } from '@nestjs/jwt';
+import { FindIdDto } from './dto/find-id.dto';
+import { SignInDto } from './dto/sign-in.dto';
+import { SignUpDto } from './dto/sign-up.dto';
+import { UpdateAuthDto } from './dto/update-auth.dto';
+import { Auth } from './entities/auth.entity';
 
 @Injectable()
 export class AuthService {
@@ -34,24 +33,68 @@ export class AuthService {
 
   // ✅ 회원가입
   async signup(dto: SignUpDto) {
-  const idExists = await this.authRepository.exists({ where: { loginId: dto.userId } });
-  const emailExists = await this.authRepository.exists({ where: { email: dto.email } });
+    try {
+      // 1. 비밀번호 확인 검증
+      if (dto.password !== dto.passwordConfirm) {
+        throw new BadRequestException('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      }
 
-  if (idExists) throw new ConflictException('이미 사용중인 아이디입니다.');
-  if (emailExists) throw new ConflictException('이미 사용중인 이메일입니다.');
+      // 2. 입력값 유효성 추가 검증
+      if (!dto.userId || !dto.password || !dto.email) {
+        throw new BadRequestException('필수 입력 항목이 누락되었습니다.');
+      }
 
-  const hashedPassword = await bcrypt.hash(dto.password, 10);
+      // 3. 이메일 형식 검증 (추가 보안)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(dto.email)) {
+        throw new BadRequestException('올바른 이메일 형식이 아닙니다.');
+      }
 
-  const user = this.authRepository.create({
-    loginId: dto.userId,
-    email: dto.email,
-    passwordHash: hashedPassword,
-    phone: dto.phone,
-  });
+      // 4. 비밀번호 강도 검증 (선택적)
+      if (dto.password.length < 4) {
+        throw new BadRequestException('비밀번호는 최소 4자 이상이어야 합니다.');
+      }
 
-  await this.authRepository.save(user);
-  return { message: '회원가입이 완료되었습니다.' };
-}
+      // 5. 중복 검사
+      const idExists = await this.authRepository.exists({ where: { loginId: dto.userId } });
+      const emailExists = await this.authRepository.exists({ where: { email: dto.email } });
+
+      if (idExists) throw new ConflictException('이미 사용중인 아이디입니다.');
+      if (emailExists) throw new ConflictException('이미 사용중인 이메일입니다.');
+
+      // 6. 비밀번호 해싱
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+      // 7. 사용자 생성
+      const user = this.authRepository.create({
+        loginId: dto.userId,
+        email: dto.email,
+        passwordHash: hashedPassword,
+        phone: dto.phone,
+        // resetToken과 resetTokenExpiresAt은 기본값 null로 자동 설정됨
+      });
+
+      // 8. 사용자 저장
+      await this.authRepository.save(user);
+
+      return {
+        message: '회원가입이 완료되었습니다.',
+        userId: dto.userId,
+        email: dto.email,
+      };
+
+    } catch (error) {
+      // 이미 처리된 NestJS 예외들은 그대로 throw
+      if (error instanceof BadRequestException || 
+          error instanceof ConflictException) {
+        throw error;
+      }
+
+      // 예상치 못한 데이터베이스 에러 등
+      console.error('회원가입 중 오류 발생:', error);
+      throw new BadRequestException('회원가입 처리 중 오류가 발생했습니다.');
+    }
+  }
 
   // ✅ 로그인 (userId 기반으로 수정됨)
   async login(dto: SignInDto) {

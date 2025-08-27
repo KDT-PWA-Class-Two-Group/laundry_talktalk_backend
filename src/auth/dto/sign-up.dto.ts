@@ -8,8 +8,13 @@ export class SignUpDto {
 
   @IsNotEmpty()
   @IsString()
-  @Length(8, 30)
+  @Length(4, 30)    // 최소 길이를 4로 완화
   password: string; // DB: password (passwordHash로 매핑됨)
+
+  @IsNotEmpty()
+  @IsString()
+  @Length(4, 30)
+  passwordConfirm: string; // 비밀번호 확인
 
   @IsNotEmpty()
   @IsEmail()
