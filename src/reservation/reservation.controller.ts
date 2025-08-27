@@ -69,7 +69,9 @@ export class ReservationController {
   @Get('user/:userId')
   async getUserReservations(@Param('userId') userId: number) {
     try {
-      return await this.service.findByUser(Number(userId));
+      // Reservation 전체 객체를 반환하되, id 필드를 추가해줌
+      const reservations = await this.service.findByUser(Number(userId));
+      return reservations.map(r => ({ ...r, id: r.reservation_id }));
     } catch (e) {
       return { message: '예약 정보를 조회할 수 없습니다.' };
     }
