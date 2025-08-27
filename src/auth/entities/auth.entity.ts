@@ -34,15 +34,12 @@ export class Auth {
   @Column({ nullable: true })
   phone?: string;
 
-  // 🔑 액세스 토큰 (JWT 저장용 — 선택)
-  @Exclude()
-  @Column({ name: 'access_token', nullable: true, select: false })
+  @Column({ name: 'access_token', type: 'varchar', length: 500, nullable: true })
   accessToken?: string;
 
-  // 🔑 리프레시 토큰 (JWT 저장용 — 선택)
-  @Exclude()
-  @Column({ name: 'refresh_token', nullable: true, select: false })
+  @Column({ name: 'refresh_token', type: 'varchar', length: 500, nullable: true })
   refreshToken?: string;
+
 
   // 🔑 관리자 여부
   @Column({ name: 'user_admin', type: 'boolean', default: false })

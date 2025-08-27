@@ -16,12 +16,14 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { MailService } from '../auth/mail/mail.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Auth) private readonly authRepository: Repository<Auth>,
     private readonly mailService: MailService,
+    private readonly jwtService: JwtService,
   ) {}
 
   // ✅ 아이디 중복 체크
@@ -32,34 +34,29 @@ export class AuthService {
 
   // ✅ 회원가입
   async signup(dto: SignUpDto) {
-    const idExists = await this.authRepository.exists({ where: { loginId: dto.userId } });
-    const emailExists = await this.authRepository.exists({ where: { email: dto.email } });
+  const idExists = await this.authRepository.exists({ where: { loginId: dto.userId } });
+  const emailExists = await this.authRepository.exists({ where: { email: dto.email } });
 
-    if (idExists) {
-    throw new ConflictException('이미 사용중인 아이디입니다.');
-  }
-  if (emailExists) {
-    throw new ConflictException('이미 사용중인 이메일입니다.');
-  }
+  if (idExists) throw new ConflictException('이미 사용중인 아이디입니다.');
+  if (emailExists) throw new ConflictException('이미 사용중인 이메일입니다.');
 
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+  const user = this.authRepository.create({
+    loginId: dto.userId,
+    email: dto.email,
+    passwordHash: hashedPassword,
+    phone: dto.phone,
+  });
 
-    const user = this.authRepository.create({
-      loginId: dto.userId,
-      email: dto.email,
-      passwordHash: hashedPassword,
-      phone: dto.phone,
-    });
-
-    await this.authRepository.save(user);
-    return { message: '회원가입이 완료되었습니다.' };
-  }
+  await this.authRepository.save(user);
+  return { message: '회원가입이 완료되었습니다.' };
+}
 
   // ✅ 로그인 (userId 기반으로 수정됨)
   async login(dto: SignInDto) {
     const user = await this.authRepository.findOne({
-      where: { loginId: dto.userId },   // ✅ 수정: email → loginId
+      where: { loginId: dto.userId },
       select: ['id', 'loginId', 'email', 'passwordHash'],
     });
 
@@ -68,9 +65,28 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
 
-    // TODO: JWT 발급
-    return { accessToken: 'jwt.token.string', userId: user.id };
+    const payload = { sub: user.id, loginId: user.loginId };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_ACCESS_EXPIRES || '1h',
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d', // ✅ 수정됨
+    });
+
+    user.accessToken = accessToken;
+    user.refreshToken = refreshToken;
+    await this.authRepository.save(user);
+
+    return {
+      accessToken,
+      refreshToken,
+      userId: user.id,
+      email: user.email,
+    };
   }
+
 
   // ✅ 아이디 찾기
   async findId(dto: FindIdDto) {

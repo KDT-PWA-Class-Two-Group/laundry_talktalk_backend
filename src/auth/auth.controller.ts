@@ -30,6 +30,7 @@ export class AuthController {
   // ✅ 회원가입
   @Post('sign-up')
   signup(@Body() dto: SignUpDto) {
+    console.log(dto)
     return this.authService.signup(dto);
   }
 

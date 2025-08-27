@@ -10,6 +10,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { StoreNoticeEventModule } from './store_notice_event/store_notice_event.module';
 import { StoresModule } from './stores/stores.module';
 import { UsersModule } from './users/users.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
