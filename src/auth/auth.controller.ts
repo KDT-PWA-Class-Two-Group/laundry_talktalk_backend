@@ -85,7 +85,7 @@ export class AuthController {
   }
 
   // ✅ 비밀번호 재설정
-  @Post('password-reset')
+  @Post('reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }
