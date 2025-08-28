@@ -24,7 +24,7 @@ import { UsersModule } from './users/users.module';
       password: process.env.DB_PASSWORD || '1234',
       database: process.env.DB_DATABASE || 'laundry_talktalk',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // 프로덕션에서는 false, 마이그레이션 사용
+      synchronize: false, // 프로덕션에서는 false, 마이그레이션 사용
     }),
     AuthModule,
     ReviewsModule,

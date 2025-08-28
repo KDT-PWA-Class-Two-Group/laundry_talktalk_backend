@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Reservation } from './entities/reservation.entity';
-import { CreateReservationDto } from './dto/create-reservation.dto';
-import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Reservation } from "./entities/reservation.entity";
+import { CreateReservationDto } from "./dto/create-reservation.dto";
+import { UpdateReservationDto } from "./dto/update-reservation.dto";
 
 @Injectable()
 export class ReservationService {
   constructor(
     @InjectRepository(Reservation)
-    private readonly reservationRepository: Repository<Reservation>,
+    private readonly reservationRepository: Repository<Reservation>
   ) {}
 
   async create(dto: CreateReservationDto): Promise<Reservation> {
@@ -23,13 +23,13 @@ export class ReservationService {
 
   async findOne(id: number): Promise<Reservation | null> {
     return this.reservationRepository.findOne({
-      where: { reservation_id: id },
+      where: { reservation_id: id }
     });
   }
 
   async update(
     id: number,
-    dto: UpdateReservationDto,
+    dto: UpdateReservationDto
   ): Promise<Reservation | null> {
     await this.reservationRepository.update(id, dto);
     return this.findOne(id);
@@ -43,8 +43,8 @@ export class ReservationService {
   async findByUser(userId: number): Promise<Reservation[]> {
     return this.reservationRepository.find({
       where: { user: { id: userId } },
-      relations: ['user', 'store', 'machine'], // 필요에 따라 조정
-      order: { reservation_create_time: 'DESC' },
+      relations: ["user", "store", "machine"], // 필요에 따라 조정
+      order: { reservation_create_time: "DESC" }
     });
   }
 }
