@@ -218,4 +218,29 @@ export class AuthService {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     return { isVerified: isMatch };
   }
+
+  // ✅ Access Token 검증 및 사용자 정보 조회
+  async verifyAccessToken(accessToken: string) {
+    try {
+      // JWT 토큰 검증
+      const payload = this.jwtService.verify(accessToken);
+      
+      // 사용자 정보 조회
+      const user = await this.authRepository.findOne({ 
+        where: { id: payload.sub },
+        select: ['id', 'loginId', 'email']
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return {
+        userId: user.loginId,
+        email: user.email
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 }

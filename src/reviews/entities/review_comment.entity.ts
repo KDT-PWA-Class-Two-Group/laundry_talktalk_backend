@@ -1,40 +1,71 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  OneToOne,
-  JoinColumn
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn
 } from "typeorm";
+import { Auth } from "../../auth/entities/auth.entity";
+import { Machine } from "../../machine/entities/machine.entity";
+import { Reservation } from "../../reservation/entities/reservation.entity";
+import { Store } from "../../stores/entities/store.entity";
 import { Review } from "./review.entity";
 
 @Entity("review_comment")
 export class ReviewComment {
-  @PrimaryGeneratedColumn()
-  review_comment_id: number; // 댓글 PK
+  @PrimaryGeneratedColumn({ name: 'review_comment_id' })
+  id: number; // PK
 
-  @Column()
-  reservation_id: number;
+  // 🔗 리뷰 ID (외래키)
+  @Column({ name: 'review_id', type: 'integer', nullable: false })
+  reviewId: number;
 
-  @Column()
-  user_id: number;
+  // 🔗 예약 ID (외래키)
+  @Column({ name: 'reservation_id', type: 'integer', nullable: false })
+  reservationId: number;
 
-  @Column()
-  store_id: number;
+  // 👤 사용자 ID (외래키)
+  @Column({ name: 'user_id', type: 'integer', nullable: false })
+  userId: number;
 
-  @Column()
-  admin_id: number;
+  // 🏪 매장 ID (외래키)
+  @Column({ name: 'store_id', type: 'integer', nullable: false })
+  storeId: number;
 
-  @Column({ type: "text" })
-  review_comment_contents: string;
+  // 🔧 세탁기 ID (외래키)
+  @Column({ name: 'machine_id', type: 'integer', nullable: false })
+  machineId: number;
 
-  @Column()
-  review_comment_create_time: string;
+  // 💬 댓글 내용
+  @Column({ name: 'review_comment_contents', type: 'text', nullable: false })
+  reviewCommentContents: string;
 
-  @Column({ default: false })
-  review_comment_cancel: boolean;
+  // 📅 댓글 작성 시간
+  @Column({ name: 'review_comment_create_time', type: 'timestamptz', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
+  reviewCommentCreateTime: Date;
 
-  // 1:1 관계: 댓글이 속한 리뷰
-  @OneToOne(() => Review)
-  @JoinColumn({ name: "review_id" }) // 외래키
+  // ❌ 댓글 취소 여부
+  @Column({ name: 'review_comment_cancel', type: 'boolean', default: false })
+  isReviewCommentCanceled: boolean;
+
+  // Foreign Key Relations
+  @ManyToOne(() => Review)
+  @JoinColumn({ name: "review_id" })
   review: Review;
+
+  @ManyToOne(() => Reservation)
+  @JoinColumn({ name: "reservation_id" })
+  reservation: Reservation;
+
+  @ManyToOne(() => Store)
+  @JoinColumn({ name: "store_id" })
+  store: Store;
+
+  @ManyToOne(() => Auth)
+  @JoinColumn({ name: "user_id" })
+  user: Auth;
+
+  @ManyToOne(() => Machine)
+  @JoinColumn({ name: "machine_id" })
+  machine: Machine;
 }

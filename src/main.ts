@@ -1,6 +1,8 @@
 import { NestFactory } from "@nestjs/core";
+import * as dotenv from 'dotenv';
 import 'reflect-metadata';
 import { AppModule } from "./app.module";
+dotenv.config();
 //nest g resource 'orders'
 
 async function bootstrap() {

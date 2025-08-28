@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: laundry_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: laundry_talktalk
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - laundry_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d laundry_talktalk"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # NestJS Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laundry_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: 1234
+      DB_DATABASE: laundry_talktalk
+      
+      # JWT Configuration
+      JWT_SECRET: LaundryTalkTalk2024!@#SecretKey$%^
+      
+      # Environment
+      NODE_ENV: production
+      
+      # Frontend URL
+      FRONTEND_URL: http://localhost:3000
+      
+      # Mail Configuration (환경에 맞게 수정)
+      MAIL_SERVICE: gmail
+      MAIL_USER: forhn37@gmail.com
+      MAIL_PASS: your-app-password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - laundry_network
+    # 헬스체크
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+
+networks:
+  laundry_network:
+    driver: bridge

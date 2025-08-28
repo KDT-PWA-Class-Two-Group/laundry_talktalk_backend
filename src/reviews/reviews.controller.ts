@@ -34,55 +34,33 @@ export class ReviewsController {
 
   // 📌 리뷰 작성
   @Post()
-  async create(@Body() createReviewDto: CreateReviewDto): Promise<{ message: string; review: any }> {
-    try {
-      // 예약 정보 조회 (user_id, store_id를 가져오기 위해)
-      const reservation = await this.reservationRepository.findOne({
-        where: { reservation_id: createReviewDto.reservationId },
-        relations: ['user', 'store']
-      });
-
-      if (!reservation) {
-        throw new NotFoundException('예약 정보를 찾을 수 없습니다.');
-      }
-
-      // 이미 리뷰가 작성되었는지 확인
-      const existingReview = await this.reviewRepository.findOne({
-        where: { reservation: { reservation_id: createReviewDto.reservationId } }
-      });
-
-      if (existingReview) {
-        throw new BadRequestException('이미 리뷰가 작성된 예약입니다.');
-      }
-
-      // 새 리뷰 생성
-      const review = this.reviewRepository.create({
-        rating: createReviewDto.rating,
-        review_contents: createReviewDto.content,
-        reservation: reservation,
-        user: reservation.user,
-        store: reservation.store,
-        review_cancel: false
-      });
-
-      const savedReview = await this.reviewRepository.save(review);
-
-      return { 
-        message: "리뷰가 성공적으로 작성되었습니다.",
-        review: {
-          id: savedReview.review_id,
-          reservationId: createReviewDto.reservationId,
-          rating: savedReview.rating,
-          content: savedReview.review_contents,
-          createdAt: savedReview.review_create_time
-        }
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new BadRequestException('리뷰 작성 중 오류가 발생했습니다.');
+  async create(
+    @Body()
+    body: {
+      rating: number | string;
+      reviewText: string;
+      reservationId?: number;
     }
+  ): Promise<{ message: string }> {
+    // body: { rating, reviewText, reservationId? }
+    const rating: string = String(body.rating);
+    const reviewText: string = String(body.reviewText);
+    const resId: number | undefined = body.reservationId;
+    // reservationId로 storeId 조회 (reservation 테이블 필요)
+    const storeId: number = 1; // 임시: 실제로는 reservationId로 조회해야 함
+
+    const review = this.reviewRepository.create({
+      rating: rating,
+      reviewContents: reviewText,
+      storeId: storeId,
+      reservationId: resId || 1, // 임시: reservationId도 필수값이므로 기본값 설정
+      userId: 1, // 임시 값 - JWT에서 가져와야 함
+      machineId: 1, // 임시 값 - 예약 정보에서 가져와야 함
+      isReviewCanceled: false
+      // reviewCreateTime은 데이터베이스에서 자동으로 CURRENT_TIMESTAMP 설정됨
+    });
+    await this.reviewRepository.save(review);
+    return { message: "리뷰가 등록되었습니다." };
   }
 
   // 📌 매장별 리뷰 조회
@@ -108,10 +86,10 @@ export class ReviewsController {
     const reviews = await query.getMany();
 
     return reviews.map((r) => ({
-      reviewId: r.review_id,
+      reviewId: r.id,
       rating: r.rating,
-      content: r.review_contents,
-      createdAt: r.review_create_time,
+      content: r.reviewContents,
+      createdAt: r.reviewCreateTime,
       userName: r.user?.loginId || '익명',
       reservationId: r.reservation?.reservation_id
     }));
@@ -124,15 +102,20 @@ export class ReviewsController {
     @Body() addCommentDto: AddCommentDto
   ): Promise<{ message: string }> {
     const review = await this.reviewRepository.findOneBy({
-      review_id: reviewId
+      id: reviewId
     });
     if (!review) throw new NotFoundException("리뷰를 찾을 수 없습니다.");
 
     const comment = this.commentRepository.create({
-      review_comment_contents: addCommentDto.content,
-      review_comment_create_time: new Date().toISOString(),
-      review_comment_cancel: false,
+      reviewCommentContents: addCommentDto.content,
+      isReviewCommentCanceled: false,
+      reviewId: reviewId,
+      reservationId: review.reservationId,
+      userId: review.userId,
+      storeId: review.storeId,
+      machineId: review.machineId,
       review: review // 1:1 관계 연결
+      // reviewCommentCreateTime은 데이터베이스에서 자동으로 CURRENT_TIMESTAMP 설정됨
     });
 
     await this.commentRepository.save(comment);
@@ -146,7 +129,7 @@ export class ReviewsController {
     @Param("reviewId", ParseIntPipe) reviewId: number
   ): Promise<{ message: string }> {
     const review = await this.reviewRepository.findOneBy({
-      review_id: reviewId
+      id: reviewId
     });
     if (!review) throw new NotFoundException("리뷰를 찾을 수 없습니다.");
 

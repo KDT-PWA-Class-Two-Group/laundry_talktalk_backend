@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (개발용)
+  postgres-dev:
+    image: postgres:17-alpine
+    container_name: laundry_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: laundry_talktalk
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "5433:5432"  # 로컬 PostgreSQL과 충돌 방지
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # 초기 데이터
+    networks:
+      - laundry_dev_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d laundry_talktalk"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # NestJS Application (개발 모드)
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: laundry_backend_dev
+    restart: unless-stopped
+    ports:
+      - "3001:3000"  # 개발용 포트
+    volumes:
+      - .:/app  # 소스 코드 마운트 (핫 리로드)
+      - /app/node_modules  # node_modules는 컨테이너 것 사용
+    environment:
+      DB_HOST: postgres-dev
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: 1234
+      DB_DATABASE: laundry_talktalk
+      JWT_SECRET: LaundryTalkTalk2024!@#SecretKey$%^
+      NODE_ENV: development
+      FRONTEND_URL: http://localhost:3000
+      MAIL_SERVICE: gmail
+      MAIL_USER: forhn37@gmail.com
+      MAIL_PASS: your-app-password
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    networks:
+      - laundry_dev_network
+    command: npm run start:dev
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  laundry_dev_network:
+    driver: bridge
