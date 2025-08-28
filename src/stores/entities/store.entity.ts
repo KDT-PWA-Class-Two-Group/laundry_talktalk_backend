@@ -10,7 +10,6 @@ import { Auth } from "../../auth/entities/auth.entity";
 import { FavStore } from "../../auth/entities/fav-store.entity";
 import { Machine } from "../../machine/entities/machine.entity";
 import { Reservation } from "../../reservation/entities/reservation.entity";
-import { Review } from "../../reviews/entities/review.entity";
 
 @Entity({ name: "store" })
 export class Store {
@@ -56,9 +55,6 @@ export class Store {
 
   @OneToMany(() => Reservation, (reservation) => reservation.store)
   reservations: Reservation[];
-
-  @OneToMany(() => Review, (review) => review.store)
-  reviews: Review[];
 
   @OneToMany(
     "StoreNoticeEvent",
