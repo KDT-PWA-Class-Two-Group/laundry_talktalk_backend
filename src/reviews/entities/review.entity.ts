@@ -5,6 +5,7 @@ import { Reservation } from "../../reservation/entities/reservation.entity";
 import { Store } from "../../stores/entities/store.entity";
 import { ReviewComment } from "./review_comment.entity";
 
+
 @Entity("review")
 export class Review {
   @PrimaryGeneratedColumn({ name: 'review_id' })

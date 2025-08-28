@@ -8,14 +8,16 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Query
+  Query,
+  BadRequestException
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AddCommentDto } from "./dto/add-comment.dto";
-// import { CreateReviewDto } from "./dto/create-review.dto";
+import { CreateReviewDto } from "./dto/create-review.dto";
 import { Review } from "./entities/review.entity";
 import { ReviewComment } from "./entities/review_comment.entity";
+import { Reservation } from "../reservation/entities/reservation.entity";
 
 @Controller("reviews")
 export class ReviewsController {
@@ -24,14 +26,13 @@ export class ReviewsController {
     private readonly reviewRepository: Repository<Review>,
 
     @InjectRepository(ReviewComment)
-    private readonly commentRepository: Repository<ReviewComment>
+    private readonly commentRepository: Repository<ReviewComment>,
+
+    @InjectRepository(Reservation)
+    private readonly reservationRepository: Repository<Reservation>
   ) {}
 
   // 📌 리뷰 작성
-  /**
-   * 프론트엔드에서 rating, reviewText만 오고, URL의 id가 reservationId임
-   * storeId는 reservationId로 조회해서 넣어줌
-   */
   @Post()
   async create(
     @Body()
@@ -70,10 +71,16 @@ export class ReviewsController {
   ): Promise<any[]> {
     const query = this.reviewRepository
       .createQueryBuilder("review")
-      .where("review.store_id = :storeId", { storeId });
+      .leftJoinAndSelect("review.user", "user")
+      .leftJoinAndSelect("review.store", "store")
+      .leftJoinAndSelect("review.reservation", "reservation")
+      .where("review.store.store_id = :storeId", { storeId })
+      .andWhere("review.review_cancel = :cancel", { cancel: false });
 
     if (sort === "latest") {
       query.orderBy("review.review_create_time", "DESC");
+    } else {
+      query.orderBy("review.review_create_time", "ASC");
     }
 
     const reviews = await query.getMany();
@@ -82,7 +89,9 @@ export class ReviewsController {
       reviewId: r.id,
       rating: r.rating,
       content: r.reviewContents,
-      createdAt: r.reviewCreateTime
+      createdAt: r.reviewCreateTime,
+      userName: r.user?.loginId || '익명',
+      reservationId: r.reservation?.reservation_id
     }));
   }
 
