@@ -46,15 +46,17 @@ export class ReviewsController {
     const reviewText: string = String(body.reviewText);
     const resId: number | undefined = body.reservationId;
     // reservationId로 storeId 조회 (reservation 테이블 필요)
-    const storeId: number | undefined = undefined; // 임시: storeId 조회 미구현 시 undefined
+    const storeId: number = 1; // 임시: 실제로는 reservationId로 조회해야 함
 
     const review = this.reviewRepository.create({
       rating: rating,
-      review_contents: reviewText,
-      store_id: storeId, // 필드명 변경
-      reservation_id: resId,
-      review_create_time: new Date().toISOString(),
-      review_cancel: false
+      reviewContents: reviewText,
+      storeId: storeId,
+      reservationId: resId || 1, // 임시: reservationId도 필수값이므로 기본값 설정
+      userId: 1, // 임시 값 - JWT에서 가져와야 함
+      machineId: 1, // 임시 값 - 예약 정보에서 가져와야 함
+      isReviewCanceled: false
+      // reviewCreateTime은 데이터베이스에서 자동으로 CURRENT_TIMESTAMP 설정됨
     });
     await this.reviewRepository.save(review);
     return { message: "리뷰가 등록되었습니다." };
@@ -77,10 +79,10 @@ export class ReviewsController {
     const reviews = await query.getMany();
 
     return reviews.map((r) => ({
-      reviewId: r.review_id,
+      reviewId: r.id,
       rating: r.rating,
-      content: r.review_contents,
-      createdAt: r.review_create_time
+      content: r.reviewContents,
+      createdAt: r.reviewCreateTime
     }));
   }
 
@@ -91,15 +93,20 @@ export class ReviewsController {
     @Body() addCommentDto: AddCommentDto
   ): Promise<{ message: string }> {
     const review = await this.reviewRepository.findOneBy({
-      review_id: reviewId
+      id: reviewId
     });
     if (!review) throw new NotFoundException("리뷰를 찾을 수 없습니다.");
 
     const comment = this.commentRepository.create({
-      review_comment_contents: addCommentDto.content,
-      review_comment_create_time: new Date().toISOString(),
-      review_comment_cancel: false,
+      reviewCommentContents: addCommentDto.content,
+      isReviewCommentCanceled: false,
+      reviewId: reviewId,
+      reservationId: review.reservationId,
+      userId: review.userId,
+      storeId: review.storeId,
+      machineId: review.machineId,
       review: review // 1:1 관계 연결
+      // reviewCommentCreateTime은 데이터베이스에서 자동으로 CURRENT_TIMESTAMP 설정됨
     });
 
     await this.commentRepository.save(comment);
@@ -113,7 +120,7 @@ export class ReviewsController {
     @Param("reviewId", ParseIntPipe) reviewId: number
   ): Promise<{ message: string }> {
     const review = await this.reviewRepository.findOneBy({
-      review_id: reviewId
+      id: reviewId
     });
     if (!review) throw new NotFoundException("리뷰를 찾을 수 없습니다.");
 

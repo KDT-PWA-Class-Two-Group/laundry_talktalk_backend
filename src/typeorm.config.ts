@@ -8,7 +8,7 @@ const config: DataSourceOptions = {
   password: process.env.DB_PASSWORD || "1234",
   database: process.env.DB_DATABASE || "laundry_talktalk",
   entities: [__dirname + "/**/*.entity{.ts,.js}"],
-  synchronize: false // 개발 환경에서만 true
+  synchronize: true // 개발 중 스키마 자동 업데이트
 };
 
 export default config;

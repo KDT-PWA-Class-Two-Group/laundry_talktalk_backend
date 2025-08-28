@@ -5,9 +5,11 @@ import {
   Param,
   Post,
   Put,
-  Res
+  Req,
+  Res,
+  UnauthorizedException
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { FindIdDto } from './dto/find-id.dto';
 import { FindPasswordDto } from './dto/find-password.dto';
@@ -114,5 +116,29 @@ export class AuthController {
   verifyPassword(@Body('password') password: string) {
     const userId = 1; // TODO: JWT에서 추출
     return this.authService.verifyPassword(userId, password);
+  }
+
+  // ✅ 사용자 인증 상태 확인
+  @Get('verify-user')
+  async verifyUser(@Req() req: Request) {
+    try {
+      // 쿠키에서 accessToken 추출
+      const accessToken = req.cookies?.accessToken;
+      
+      if (!accessToken) {
+        throw new UnauthorizedException('Access token not found');
+      }
+
+      // JWT 토큰 검증 및 사용자 정보 조회
+      const userInfo = await this.authService.verifyAccessToken(accessToken);
+      
+      return {
+        success: true,
+        userId: userInfo.userId,
+        email: userInfo.email
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 }
