@@ -143,6 +143,7 @@ export class AuthService {
   // ✅ 비밀번호 재설정 요청 (토큰 발급 + 메일 발송)
   async sendResetPasswordMail(email: string) {
     const user = await this.authRepository.findOne({ where: { email } });
+    console.log(user)
     if (!user) throw new NotFoundException('가입된 이메일이 없습니다.');
 
     const token = crypto.randomBytes(32).toString('hex');

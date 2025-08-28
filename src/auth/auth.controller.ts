@@ -4,8 +4,10 @@ import {
   Get,
   Param,
   Post,
-  Put
+  Put,
+  Res
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { FindIdDto } from './dto/find-id.dto';
 import { FindPasswordDto } from './dto/find-password.dto';
@@ -32,9 +34,42 @@ export class AuthController {
 
   // ✅ 로그인
   @Post('login')
-  login(@Body() dto: SignInDto) {
-    console.log('Login DTO:', dto);
-    return this.authService.login(dto);
+  async login(@Body() dto: SignInDto, @Res({ passthrough: true }) res: Response) {
+  
+    const result = await this.authService.login(dto);
+    
+    // 🍪 Access Token을 HttpOnly Cookie에 설정
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,        // XSS 공격 방지
+      secure: false,         // 🔧 localhost 개발환경에서는 false
+      sameSite: 'lax',       // 🔧 localhost에서는 'lax'가 더 안전
+      maxAge: 60 * 60 * 1000, // 1시간 (밀리초)
+    });
+
+    // 🍪 Refresh Token을 HttpOnly Cookie에 설정
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,        // XSS 공격 방지
+      secure: false,         // 🔧 localhost 개발환경에서는 false
+      sameSite: 'lax',       // 🔧 localhost에서는 'lax'가 더 안전
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일 (밀리초)
+    });
+
+    // 토큰은 쿠키에 설정했으므로 응답에서 제외
+    return {
+      message: '로그인 성공',
+      userId: result.userId,
+      email: result.email,
+    };
+  }
+
+  // ✅ 로그아웃
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    // 🍪 쿠키 삭제
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    
+    return { message: '로그아웃 되었습니다.' };
   }
 
   // ✅ 아이디 찾기
@@ -50,7 +85,7 @@ export class AuthController {
   }
 
   // ✅ 비밀번호 재설정
-  @Post('password/reset')
+  @Post('reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }

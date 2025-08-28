@@ -10,6 +10,7 @@ import { ReservationModule } from './reservation/reservation.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { StoreNoticeEventModule } from './store_notice_event/store_notice_event.module';
 import { StoresModule } from './stores/stores.module';
+import config from './typeorm.config';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -17,16 +18,7 @@ import { UsersModule } from './users/users.module';
     ConfigModule.forRoot({
       isGlobal: true
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || '192.168.100.139',
-      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || '1234',
-      database: process.env.DB_DATABASE || 'laundry_talktalk',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV !== 'production', // 환경별 설정
-    }),
+    TypeOrmModule.forRoot(config),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'laundry-secret-key',
