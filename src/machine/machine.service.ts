@@ -1,47 +1,53 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource } from "typeorm";
-import { MachineOption } from "./entities/machine_options.entity";
+import { Repository, DataSource, In } from "typeorm";
 import { UpdateMachineOptionsDto } from "./dto/update-machine-options.dto";
 import { EstimateResponseDto } from "./dto/estimate-responce.dto";
 import { CreateMachineDto } from "./dto/create-machine.dto";
 import { Machine } from "./entities/machine.entity";
+import { MachineResponseDto } from "./dto/machine-response.dto";
+import { MachineOptions } from "./entities/machine-options.entity";
+import { Store } from "src/stores/entities/store.entity";
 
 @Injectable()
 export class MachineService {
   constructor(
     @InjectRepository(Machine)
     private readonly machineRepository: Repository<Machine>,
-    @InjectRepository(MachineOption)
-    private readonly machineOptionRepository: Repository<MachineOption>,
+    @InjectRepository(MachineOptions)
+    private readonly machineOptionsRepository: Repository<MachineOptions>,
+    @InjectRepository(Store) // Store 엔티티를 주입합니다.
+    private readonly storeRepository: Repository<Store>,
     private readonly dataSource: DataSource
   ) {}
 
-  async createMachine(createMachineDto: CreateMachineDto): Promise<Machine> {
+  async createMachine(
+    createMachineDto: CreateMachineDto,
+    userId: number
+  ): Promise<MachineResponseDto> {
     const { storeId, machineType } = createMachineDto;
 
-    // TODO: 매장이 실제로 존재하는지 확인하는 로직을 추가하면 더 안정적인 코드가 됩니다.
-    // (예: StoreRepository 주입 후 findOneOrFail 사용)
-
-    // DTO의 machineType ('washer' | 'dryer')을 Entity의 boolean 타입으로 변환합니다.
-    const isWasher = machineType === "washer";
-
     const newMachine = this.machineRepository.create({
-      store_id2: storeId,
-      // machine_name은 Machine 엔티티에 존재하지 않으므로 생성 객체에서 제외합니다.
-      // admin_id는 엔티티에 있지만 DTO에 없으므로, 필요하다면 추가해야 합니다.
-      machine_type: isWasher
+      store: { store_id: storeId },
+      user: { id: userId },
+      machine_type: machineType
     });
 
-    return this.machineRepository.save(newMachine);
+    const savedMachine = await this.machineRepository.save(newMachine);
+
+    return {
+      machineId: savedMachine.machine_id,
+      storeId: savedMachine.store.store_id,
+      machineName: `기계 #${savedMachine.machine_id}`,
+      machineType: savedMachine.machine_type
+    };
   }
 
   async updateMachineOptions(data: UpdateMachineOptionsDto): Promise<void> {
     const { machineId, storeId, options } = data;
 
-    // 1. 기기와 매장이 존재하는지, 서로 일치하는지 확인
     const machine = await this.machineRepository.findOne({
-      where: { machine_id: machineId, store_id2: storeId }
+      where: { machine_id: machineId, store: { store_id: storeId } }
     });
 
     if (!machine) {
@@ -50,37 +56,81 @@ export class MachineService {
       );
     }
 
-    // 2. 트랜잭션을 사용하여 모든 옵션을 한 번에 업데이트 (원자성 보장)
-    await this.dataSource.transaction(async (transactionalEntityManager) => {
-      for (const option of options) {
-        const result = await transactionalEntityManager.update(
-          MachineOption,
-          {
-            options_id: option.optionId,
-            machine_id: machineId // 옵션이 해당 기기에 속하는지 확인
-          },
-          {
-            options_base_price: String(option.price),
-            options_base_time: String(option.durationMinutes)
-          }
-        );
-
-        // 업데이트가 실제로 이루어졌는지 확인
-        if (result.affected === 0) {
-          throw new NotFoundException(
-            `Option with ID ${option.optionId} for machine ${machineId} not found.`
-          );
-        }
-      }
+    const optionIds = options.map((o) => o.optionId);
+    const foundOptions = await this.machineOptionsRepository.findBy({
+      options_id: In(optionIds)
     });
+
+    if (foundOptions.length !== optionIds.length) {
+      throw new NotFoundException(`One or more options not found.`);
+    }
+
+    machine.options = foundOptions;
+
+    await this.machineRepository.save(machine);
   }
 
-  calculateEstimatedCost(data: UpdateMachineOptionsDto): EstimateResponseDto {
-    const { options } = data;
+  /**
+   * 프론트엔드에서 특정 기기에 대한 옵션 목록을 불러오는 함수
+   */
+  async getMachineOptions(
+    storeId: number,
+    machineId: number
+  ): Promise<{
+    courses: MachineOptions[];
+    options: MachineOptions[];
+    dryerTimes: MachineOptions[];
+  }> {
+    const machine = await this.machineRepository
+      .createQueryBuilder("machine")
+      .leftJoinAndSelect("machine.options", "options")
+      .leftJoinAndSelect("machine.store", "store")
+      .where("machine.machine_id = :machineId", { machineId })
+      .andWhere("store.store_id = :storeId", { storeId })
+      .getOne();
 
-    const totalCost = options.reduce((sum, option) => sum + option.price, 0);
-    const totalDuration = options.reduce(
-      (sum, option) => sum + option.durationMinutes,
+    if (!machine) {
+      throw new NotFoundException("Machine not found for this store");
+    }
+
+    const courses = machine.options.filter(
+      (opt) => opt.machine_type === true && opt.options_type === true
+    );
+    const additionalOptions = machine.options.filter(
+      (opt) => opt.machine_type === true && opt.options_type === false
+    );
+    const dryerTimes = machine.options.filter(
+      (opt) => opt.machine_type === false && opt.options_type === true
+    );
+
+    return { courses, options: additionalOptions, dryerTimes };
+  }
+
+  /**
+   * 프론트엔드에서 보낸 선택된 옵션 목록으로 예상 비용 및 시간 계산
+   */
+  async calculateEstimate(
+    optionsFromRequest: { optionId: number }[]
+  ): Promise<EstimateResponseDto> {
+    if (!optionsFromRequest || optionsFromRequest.length === 0) {
+      return { totalCost: 0, totalDuration: 0 };
+    }
+
+    const optionIds = optionsFromRequest.map((o) => o.optionId);
+    const foundOptions = await this.machineOptionsRepository.findBy({
+      options_id: In(optionIds)
+    });
+
+    if (foundOptions.length !== optionIds.length) {
+      throw new NotFoundException(`One or more options not found.`);
+    }
+
+    const totalCost = foundOptions.reduce(
+      (sum, opt) => sum + Number(opt.options_base_price),
+      0
+    );
+    const totalDuration = foundOptions.reduce(
+      (sum, opt) => sum + Number(opt.options_base_time),
       0
     );
 

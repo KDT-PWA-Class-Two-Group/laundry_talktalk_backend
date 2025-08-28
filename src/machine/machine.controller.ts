@@ -1,26 +1,41 @@
-// src/controller/machine.controller.ts
-import { Controller, Post, Body, HttpStatus, HttpCode } from "@nestjs/common";
+import {
+  Controller,
+  Req,
+  Post,
+  Body,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
+  Get,
+  Query
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
 import { MachineService } from "./machine.service";
 import { UpdateMachineOptionsDto } from "./dto/update-machine-options.dto";
 import { UpdateMachineOptionsResponseDto } from "./dto/update-option-responce.dto";
 import { EstimateResponseDto } from "./dto/estimate-responce.dto";
 import { CreateMachineDto } from "./dto/create-machine.dto";
-import { Machine } from "./entities/machine.entity";
+import { MachineResponseDto } from "./dto/machine-response.dto";
+import { Auth } from "src/auth/entities/auth.entity";
+import { CalculateEstimateDto } from "./dto/calculate-estimate.dto";
 
 @Controller("machine")
 export class MachineController {
   constructor(private readonly machineService: MachineService) {}
 
   @Post()
-  @HttpCode(HttpStatus.CREATED) // 리소스 생성이므로 201 Created 상태 코드가 더 적합합니다.
+  @UseGuards(AuthGuard())
+  @HttpCode(HttpStatus.CREATED)
   async createMachine(
-    @Body() createMachineDto: CreateMachineDto
-  ): Promise<Machine> {
-    return this.machineService.createMachine(createMachineDto);
+    @Body() createMachineDto: CreateMachineDto,
+    @Req() req: { user: Auth }
+  ): Promise<MachineResponseDto> {
+    const userId = req.user.id;
+    return this.machineService.createMachine(createMachineDto, userId);
   }
 
   @Post("options")
-  @HttpCode(HttpStatus.OK) // 200 OK 상태 코드 명시
+  @HttpCode(HttpStatus.OK)
   async updateOptions(
     @Body() data: UpdateMachineOptionsDto
   ): Promise<UpdateMachineOptionsResponseDto> {
@@ -31,8 +46,20 @@ export class MachineController {
   }
 
   @Post("estimate")
-  @HttpCode(HttpStatus.OK) // 200 OK 상태 코드 명시
-  getEstimate(@Body() data: UpdateMachineOptionsDto): EstimateResponseDto {
-    return this.machineService.calculateEstimatedCost(data);
+  @HttpCode(HttpStatus.OK)
+  async getEstimate(
+    @Body() dto: CalculateEstimateDto
+  ): Promise<EstimateResponseDto> {
+    return this.machineService.calculateEstimate(dto.options);
+  }
+
+  // --- 새로 추가되는 엔드포인트 ---
+  @Get("options")
+  @HttpCode(HttpStatus.OK)
+  async getMachineOptions(
+    @Query("storeId") storeId: number,
+    @Query("machineId") machineId: number
+  ) {
+    return this.machineService.getMachineOptions(storeId, machineId);
   }
 }

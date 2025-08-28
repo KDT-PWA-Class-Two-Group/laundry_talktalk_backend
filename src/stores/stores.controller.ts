@@ -41,4 +41,20 @@ export class StoresController {
   async remove(@Param("id") storeId: string) {
     return this.storesService.remove(+storeId);
   }
+
+  @Get(":storeId/machines")
+  async getStoreMachines(@Param("storeId") storeId: string) {
+    // StoresService에서 모든 기기 목록을 가져옵니다.
+    const machines = await this.storesService.getMachinesByStoreId(+storeId);
+
+    // 기기 목록을 세탁기와 건조기로 나눕니다.
+    const washers = machines.filter((machine) => machine.machine_type === true);
+    const dryers = machines.filter((machine) => machine.machine_type === false);
+
+    // 프런트엔드가 예상하는 객체 형태로 반환합니다.
+    return {
+      washers,
+      dryers
+    };
+  }
 }
