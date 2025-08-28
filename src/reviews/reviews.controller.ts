@@ -8,14 +8,16 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Query
+  Query,
+  BadRequestException
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AddCommentDto } from "./dto/add-comment.dto";
-// import { CreateReviewDto } from "./dto/create-review.dto";
+import { CreateReviewDto } from "./dto/create-review.dto";
 import { Review } from "./entities/review.entity";
 import { ReviewComment } from "./entities/review_comment.entity";
+import { Reservation } from "../reservation/entities/reservation.entity";
 
 @Controller("reviews")
 export class ReviewsController {
@@ -24,40 +26,63 @@ export class ReviewsController {
     private readonly reviewRepository: Repository<Review>,
 
     @InjectRepository(ReviewComment)
-    private readonly commentRepository: Repository<ReviewComment>
+    private readonly commentRepository: Repository<ReviewComment>,
+
+    @InjectRepository(Reservation)
+    private readonly reservationRepository: Repository<Reservation>
   ) {}
 
   // 📌 리뷰 작성
-  /**
-   * 프론트엔드에서 rating, reviewText만 오고, URL의 id가 reservationId임
-   * storeId는 reservationId로 조회해서 넣어줌
-   */
   @Post()
-  async create(
-    @Body()
-    body: {
-      rating: number | string;
-      reviewText: string;
-      reservationId?: number;
-    }
-  ): Promise<{ message: string }> {
-    // body: { rating, reviewText, reservationId? }
-    const rating: string = String(body.rating);
-    const reviewText: string = String(body.reviewText);
-    const resId: number | undefined = body.reservationId;
-    // reservationId로 storeId 조회 (reservation 테이블 필요)
-    const storeId: number | undefined = undefined; // 임시: storeId 조회 미구현 시 undefined
+  async create(@Body() createReviewDto: CreateReviewDto): Promise<{ message: string; review: any }> {
+    try {
+      // 예약 정보 조회 (user_id, store_id를 가져오기 위해)
+      const reservation = await this.reservationRepository.findOne({
+        where: { reservation_id: createReviewDto.reservationId },
+        relations: ['user', 'store']
+      });
 
-    const review = this.reviewRepository.create({
-      rating: rating,
-      review_contents: reviewText,
-      store_id: storeId, // 필드명 변경
-      reservation_id: resId,
-      review_create_time: new Date().toISOString(),
-      review_cancel: false
-    });
-    await this.reviewRepository.save(review);
-    return { message: "리뷰가 등록되었습니다." };
+      if (!reservation) {
+        throw new NotFoundException('예약 정보를 찾을 수 없습니다.');
+      }
+
+      // 이미 리뷰가 작성되었는지 확인
+      const existingReview = await this.reviewRepository.findOne({
+        where: { reservation: { reservation_id: createReviewDto.reservationId } }
+      });
+
+      if (existingReview) {
+        throw new BadRequestException('이미 리뷰가 작성된 예약입니다.');
+      }
+
+      // 새 리뷰 생성
+      const review = this.reviewRepository.create({
+        rating: createReviewDto.rating,
+        review_contents: createReviewDto.content,
+        reservation: reservation,
+        user: reservation.user,
+        store: reservation.store,
+        review_cancel: false
+      });
+
+      const savedReview = await this.reviewRepository.save(review);
+
+      return { 
+        message: "리뷰가 성공적으로 작성되었습니다.",
+        review: {
+          id: savedReview.review_id,
+          reservationId: createReviewDto.reservationId,
+          rating: savedReview.rating,
+          content: savedReview.review_contents,
+          createdAt: savedReview.review_create_time
+        }
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('리뷰 작성 중 오류가 발생했습니다.');
+    }
   }
 
   // 📌 매장별 리뷰 조회
@@ -68,10 +93,16 @@ export class ReviewsController {
   ): Promise<any[]> {
     const query = this.reviewRepository
       .createQueryBuilder("review")
-      .where("review.store_id = :storeId", { storeId });
+      .leftJoinAndSelect("review.user", "user")
+      .leftJoinAndSelect("review.store", "store")
+      .leftJoinAndSelect("review.reservation", "reservation")
+      .where("review.store.store_id = :storeId", { storeId })
+      .andWhere("review.review_cancel = :cancel", { cancel: false });
 
     if (sort === "latest") {
       query.orderBy("review.review_create_time", "DESC");
+    } else {
+      query.orderBy("review.review_create_time", "ASC");
     }
 
     const reviews = await query.getMany();
@@ -80,7 +111,9 @@ export class ReviewsController {
       reviewId: r.review_id,
       rating: r.rating,
       content: r.review_contents,
-      createdAt: r.review_create_time
+      createdAt: r.review_create_time,
+      userName: r.user?.loginId || '익명',
+      reservationId: r.reservation?.reservation_id
     }));
   }
 

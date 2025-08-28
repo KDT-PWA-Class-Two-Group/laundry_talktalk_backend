@@ -1,31 +1,43 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, ManyToOne, JoinColumn, CreateDateColumn } from "typeorm";
 import { ReviewComment } from "./review_comment.entity";
+import { Reservation } from "../../reservation/entities/reservation.entity";
+import { Auth } from "../../auth/entities/auth.entity";
+import { Store } from "../../stores/entities/store.entity";
 
 @Entity("review")
 export class Review {
   @PrimaryGeneratedColumn()
   review_id: number;
 
-  @Column()
-  reservation_id: number;
+  @ManyToOne(() => Reservation, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'reservation_id' })
+  reservation: Reservation;
 
-  @Column()
-  user_id: number;
+  @ManyToOne(() => Auth, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: Auth;
 
-  @Column()
-  store_id: number;
+  @ManyToOne(() => Store, { 
+    eager: false,
+    nullable: false 
+  })
+  @JoinColumn({ name: 'store_id' })
+  store: Store;
 
-  @Column()
-  admin_id: number;
-
-  @Column()
-  rating: string;
+  @Column({ type: "decimal", precision: 2, scale: 1 })
+  rating: number;
 
   @Column({ type: "text" })
   review_contents: string;
 
-  @Column()
-  review_create_time: string;
+  @CreateDateColumn()
+  review_create_time: Date;
 
   @Column({ default: false })
   review_cancel: boolean;
