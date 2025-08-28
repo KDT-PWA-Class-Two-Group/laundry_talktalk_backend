@@ -1,56 +1,36 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Auth } from '../../auth/entities/auth.entity';
-import { Machine } from '../../machine/entities/machine.entity';
-import { Reservation } from '../../reservation/entities/reservation.entity';
-import { Store } from '../../stores/entities/store.entity';
-import { ReviewComment } from './review_comment.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from "typeorm";
+import { ReviewComment } from "./review_comment.entity";
 
-@Entity('review')
+@Entity("review")
 export class Review {
   @PrimaryGeneratedColumn()
   review_id: number;
 
-  @ManyToOne(() => Reservation, { 
-    eager: false,
-    nullable: false 
-  })
-  @JoinColumn({ name: 'reservation_id' })
-  reservation: Reservation;
+  @Column()
+  reservation_id: number;
 
-  @ManyToOne(() => Store, { 
-    eager: false,
-    nullable: false 
-  })
-  @JoinColumn({ name: 'store_id' })
-  store: Store;
+  @Column()
+  user_id: number;
 
-  @ManyToOne(() => Auth, { 
-    eager: false,
-    nullable: false 
-  })
-  @JoinColumn({ name: 'user_id' })
-  user: Auth;
+  @Column()
+  store_id: number;
 
-  @ManyToOne(() => Machine, { 
-    eager: false,
-    nullable: false 
-  })
-  @JoinColumn({ name: 'machine_id' })
-  machine: Machine;
+  @Column()
+  admin_id: number;
 
-  @Column({ type: 'varchar', length: 10, nullable: true })
+  @Column()
   rating: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: "text" })
   review_contents: string;
 
-  @Column({ type: 'time' })
+  @Column()
   review_create_time: string;
 
   @Column({ default: false })
   review_cancel: boolean;
 
-  // 1:Many 관계: 이 리뷰에 여러 댓글이 달릴 수 있음
-  @OneToMany(() => ReviewComment, (comment) => comment.review)
-  comments: ReviewComment[];
+  // 1:1 관계: 이 리뷰에 딱 하나의 댓글
+  @OneToOne(() => ReviewComment, (comment) => comment.review)
+  comment: ReviewComment;
 }

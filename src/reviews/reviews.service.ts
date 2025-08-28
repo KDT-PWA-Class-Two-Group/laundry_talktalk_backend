@@ -1,26 +1,53 @@
-import { Injectable } from '@nestjs/common';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
+// src/reviews/reviews.service.ts
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Review } from "./entities/review.entity";
+import { CreateReviewDto } from "./dto/create-review.dto";
+import { UpdateReviewDto } from "./dto/update-review.dto";
 
 @Injectable()
 export class ReviewsService {
-  create(createReviewDto: CreateReviewDto) {
-    return 'This action adds a new review';
+  constructor(
+    @InjectRepository(Review)
+    private readonly reviewRepository: Repository<Review>
+  ) {}
+
+  // 리뷰 생성
+  async create(createReviewDto: CreateReviewDto): Promise<Review> {
+    const review = this.reviewRepository.create(createReviewDto);
+    return await this.reviewRepository.save(review);
   }
 
-  findAll() {
-    return `This action returns all reviews`;
+  // 모든 리뷰 조회
+  async findAll(): Promise<Review[]> {
+    return await this.reviewRepository.find({
+      relations: ["comment"] // 댓글도 함께 가져오기
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} review`;
+  // 특정 리뷰 조회
+  async findOne(id: number): Promise<Review> {
+    const review = await this.reviewRepository.findOne({
+      where: { review_id: id },
+      relations: ["comment"]
+    });
+    if (!review) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
+    return review;
   }
 
-  update(id: number, updateReviewDto: UpdateReviewDto) {
-    return `This action updates a #${id} review`;
+  // 리뷰 수정
+  async update(id: number, updateReviewDto: UpdateReviewDto): Promise<Review> {
+    const review = await this.findOne(id);
+    Object.assign(review, updateReviewDto);
+    return await this.reviewRepository.save(review);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} review`;
+  // 리뷰 삭제
+  async remove(id: number): Promise<void> {
+    const review = await this.findOne(id);
+    await this.reviewRepository.remove(review);
   }
 }
